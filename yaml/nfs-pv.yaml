@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 100.91.158.43
+    path: "/srv/nfs/k8s"
+  mountOptions:
+    - nfsvers=4.2
