@@ -1,0 +1,28 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-svc
+spec:
+  ports:
+    - port: 80
+  selector:
+    role: web-frontend
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx  # Adjust this if using a different ingress controller
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-svc
+            port: 
+              number: 80
+
