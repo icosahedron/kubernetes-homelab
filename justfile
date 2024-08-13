@@ -20,11 +20,16 @@ install-ingress:
 deploy-nginx:
     sudo kubectl apply -f yaml/nginx-nfs-pv.yaml
     sudo kubectl apply -f yaml/nginx-nfs-pvc.yaml
-    sudo kubectl apply -f yaml/nginx-nfs-deployment.yaml
+    sudo kubectl apply -f yaml/nginx-pvc-deployment.yaml
+    sudo kubectl wait --for=condition=available --timeout=300s deploy/nginx
     sudo kubectl apply -f yaml/nginx-service.yaml
+    while [ -z $(sudo kubectl get svc/nginx -o jsonpath='{.spec.clusterIP}') ]; do \
+       sleep 5; \
+    done
 
 delete-nginx:
-    -sudo kubectl delete deploy/nginx-nfs
     -sudo kubectl delete svc/nginx
-    -sudo kubectl delete pvc/nginx-pvc
+    -sudo kubectl delete ingress/nginx-ingress
+    -sudo kubectl delete deploy/nginx
+    -sudo kubectl delete pvc/nginx
     -sudo kubectl delete pv/nginx-nfs
