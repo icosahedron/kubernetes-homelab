@@ -1,0 +1,28 @@
+# Gitea configuration
+gitea:
+  image:
+    repository: gitea/gitea
+    tag: latest
+  replicas: 1
+
+# Persistence configuration
+persistence:
+  type: nfs  # Can be 'nfs' or 'cloud-provider'
+  nfs:
+    server: 100.91.158.43
+    path: "/srv/nfs/k8s/gitea"
+  cloudProvider:
+    # Add cloud provider specific settings here
+  size: 5Gi
+
+# Database configuration
+database:
+  type: sqlite  # Can be 'sqlite' or 'postgres'
+  postgres:
+    # Add PostgreSQL specific settings here
+
+# Ingress configuration
+ingress:
+  enabled: true
+  host: gitea.icosahedron.io
+

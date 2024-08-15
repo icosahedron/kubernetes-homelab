@@ -33,3 +33,19 @@ delete-nginx:
     -sudo kubectl delete deploy/nginx
     -sudo kubectl delete pvc/nginx
     -sudo kubectl delete pv/nginx-nfs
+
+deploy-gitea:
+    sudo kubectl apply -f yaml/gitea-nfs-pv.yaml
+    sudo kubectl apply -f yaml/gitea-nfs-pvc.yaml
+    sudo kubectl apply -f yaml/gitea-deployment.yaml
+    while [ -z $(sudo kubectl get svc/gitea -o jsonpath='{.spec.clusterIP}') ]; do \
+       sleep 5; \
+    done
+
+delete-gitea:
+    -sudo kubectl delete ingress/gitea-ingress
+    -sudo kubectl delete deploy/gitea
+    -sudo kubectl delete svc/gitea
+    -sudo kubectl delete pvc/gitea
+    -sudo kubectl delete pv/gitea-nfs
+
