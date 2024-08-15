@@ -1,0 +1,18 @@
+{{- if eq .Values.persistence.type "nfs" }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Release.Name }}-gitea-nfs
+spec:
+  storageClassName: nfs-client
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: {{ .Values.persistence.nfs.server }}
+    path: {{ .Values.persistence.nfs.path | quote }}
+  mountOptions:
+    - nfsvers=4.2
+{{- end }}
+

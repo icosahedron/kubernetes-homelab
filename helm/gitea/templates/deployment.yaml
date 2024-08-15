@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-gitea
+spec:
+  replicas: {{ if eq .Values.database.type "sqlite" }}1{{ else }}{{ .Values.gitea.replicas }}{{ end }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-gitea
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-gitea
+    spec:
+      containers:
+      - name: gitea
+        image: "{{ .Values.gitea.image.repository }}:{{ .Values.gitea.image.tag }}"
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: gitea-data
+          mountPath: /data
+        {{- if eq .Values.database.type "postgres" }}
+        env:
+        - name: DB_TYPE
+          value: postgres
+        # Add more PostgreSQL environment variables here
+        {{- end }}
+      volumes:
+      - name: gitea-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-gitea
+
