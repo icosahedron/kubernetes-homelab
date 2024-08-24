@@ -1,0 +1,20 @@
+{{- if and .Values.persistence.enabled .Values.persistence.nfs -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "postgresql.fullname" . }}-pv
+  labels:
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - {{ .Values.persistence.accessMode }}
+  {{- if .Values.persistence.storageClass }}
+  storageClassName: "{{ .Values.persistence.storageClass }}"
+  {{- end }}
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: {{ .Values.persistence.nfs.server }}
+    path: {{ .Values.persistence.nfs.path }}
+{{- end }}

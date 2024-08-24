@@ -1,0 +1,6 @@
+# Chart.yaml
+apiVersion: v2
+name: postgresql
+description: A Helm chart for PostgreSQL on Kubernetes
+version: 0.1.0
+appVersion: "16.1.0"

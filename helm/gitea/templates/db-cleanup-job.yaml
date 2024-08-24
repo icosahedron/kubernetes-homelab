@@ -1,0 +1,41 @@
+# templates/db-cleanup-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-db-cleanup
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ .Release.Name }}-db-cleanup
+    spec:
+      serviceAccountName: {{ .Release.Name }}-db-job-account
+      restartPolicy: Never
+      containers:
+      - name: db-cleanup
+        image: bitnami/postgresql:14
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          PGPASSWORD=$POSTGRES_PASSWORD psql -h $DB_HOST -p $DB_PORT -U postgres <<EOF
+          DROP DATABASE IF EXISTS $DB_NAME;
+          DROP ROLE IF EXISTS $DB_USER;
+          EOF
+        env:
+        - name: DB_HOST
+          value: {{ .Values.gitea.database.host }}
+        - name: DB_PORT
+          value: {{ .Values.gitea.database.port | quote }}
+        - name: DB_USER
+          value: {{ .Values.gitea.database.user }}
+        - name: DB_NAME
+          value: {{ .Values.gitea.database.name }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.gitea.postgresql.secretName }}
+              key: {{ .Values.gitea.postgresql.secretKey }}
+              namespace: {{ .Values.gitea.postgresql.namespace }}
+

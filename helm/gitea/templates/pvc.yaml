@@ -1,0 +1,16 @@
+# templates/pvc.yaml
+{{- if .Values.gitea.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-gitea-pvc
+spec:
+  storageClassName: {{ .Values.gitea.persistence.storageClass }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.gitea.persistence.size }}
+  volumeName: {{ .Release.Name }}-gitea-pv
+{{- end }}
+

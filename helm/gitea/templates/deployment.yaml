@@ -1,0 +1,28 @@
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-gitea
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitea
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      containers:
+      - name: gitea
+        image: {{ .Values.gitea.image.repository }}:{{ .Values.gitea.image.tag }}
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: gitea-data
+          mountPath: /data
+      volumes:
+      - name: gitea-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-gitea-pvc
+
