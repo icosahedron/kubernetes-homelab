@@ -1,0 +1,17 @@
+# templates/pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Release.Name }}-gitea-pv
+spec:
+  capacity:
+    storage: {{ .Values.gitea.persistence.size }}
+  storageClassName: {{ .Values.gitea.persistence.storageClass }}
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: {{ .Values.gitea.persistence.nfs.server }}
+    path: {{ .Values.gitea.persistence.nfs.path }}
+  mountOptions:
+    - nfsvers=4.2
+

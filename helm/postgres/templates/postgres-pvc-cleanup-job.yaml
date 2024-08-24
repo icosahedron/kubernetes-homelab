@@ -1,0 +1,31 @@
+# templates/postgres-pvc-cleanup-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-postgres-pvc-cleanup
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ .Release.Name }}-postgres-pvc-cleanup
+    spec:
+      serviceAccountName: {{ .Release.Name }}-postgres-pvc-cleanup-account
+      restartPolicy: Never
+      containers:
+      - name: kubectl
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Wait for PostgreSQL pods to terminate
+          while kubectl get pods -l app.kubernetes.io/name=postgresql -n {{ .Release.Namespace }} | grep -q Running; do
+            echo "Waiting for PostgreSQL pods to terminate..."
+            sleep 5
+          done
+          
+          # Delete PVCs
+          kubectl delete pvc -l app.kubernetes.io/name=postgresql -n {{ .Release.Namespace }}

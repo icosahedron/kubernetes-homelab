@@ -1,0 +1,51 @@
+ templates/db-init-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-db-init
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ .Release.Name }}-db-init
+    spec:
+      serviceAccountName: {{ .Release.Name }}-db-job-account
+      restartPolicy: Never
+      containers:
+      - name: db-init
+        image: bitnami/postgresql:14
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          PGPASSWORD=$POSTGRES_PASSWORD psql -h $DB_HOST -p $DB_PORT -U postgres <<EOF
+          DO \$\$
+          BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$DB_USER') THEN
+              CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASSWORD';
+            END IF;
+            IF NOT EXISTS (SELECT FROM pg_database WHERE datname = '$DB_NAME') THEN
+              CREATE DATABASE $DB_NAME WITH OWNER $DB_USER TEMPLATE template0 ENCODING UTF8 LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8';
+            END IF;
+          END
+          \$\$;
+          EOF
+        env:
+        - name: DB_HOST
+          value: {{ .Values.gitea.database.host }}
+        - name: DB_PORT
+          value: {{ .Values.gitea.database.port | quote }}
+        - name: DB_USER
+          value: {{ .Values.gitea.database.user }}
+        - name: DB_PASSWORD
+          value: {{ .Values.gitea.database.password }}
+        - name: DB_NAME
+          value: {{ .Values.gitea.database.name }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.gitea.postgresql.secretName }}
+              key: {{ .Values.gitea.postgresql.secretKey }}
+              namespace: {{ .Values.gitea.postgresql.namespace }}

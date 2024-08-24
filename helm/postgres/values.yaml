@@ -1,0 +1,38 @@
+# values.yaml
+image:
+  repository: postgres
+  tag: 16.1
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+persistence:
+  enabled: true
+  storageClass: "postgres-sc"
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  nfs:
+    server: 100.91.158.43
+    path: "/srv/nfs/k8s/postgres"
+
+service:
+  type: ClusterIP
+  port: 5432
+
+postgresql:
+  username: homelab
+  database: homelab
+  password: homelab # You should override this in a separate values file
+  initdbArgs: "--data-checksums"
+  persistence:
+    enabled: true
+    deletePVCOnUninstall: true  # Set this to false if you want to keep the PVCs
+
+resources:
+  requests:
+    cpu: 750m
+    memory: 1Gi
+  limits:
+    cpu: 2
+    memory: 3Gi
+
