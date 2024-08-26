@@ -5,9 +5,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: ""
+  storageClassName: nfs-client
   resources:
     requests:
-      storage: 5Gi
-  volumeName: nginx-nfs
-
+      storage: 2Gi
