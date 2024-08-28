@@ -44,3 +44,6 @@ spec:
         resources:
           requests:
             storage: {{ .Values.persistence.size }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
