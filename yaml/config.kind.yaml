@@ -10,9 +10,12 @@ apiVersion: kind.x-k8s.io/v1alpha4
 # on the control-plane node.
 #
 # You probably don't need this unless you are testing Kubernetes itself.
+featureGates:
+  "StatefulSetAutoDeletePVC": true
 name: homelab
 nodes:
   - role: control-plane
+    image: kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865
     kubeadmConfigPatches:
     - |
       kind: InitConfiguration
@@ -27,10 +30,12 @@ nodes:
       hostPort: 443
       protocol: TCP
   - role: worker
+    image: kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865
     extraMounts:
       - hostPath: /home/icosahedron/kubernetes/storage
         containerPath: /storage
   - role: worker
+    image: kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865
     extraMounts:
       - hostPath: /home/icosahedron/kubernetes/storage
         containerPath: /storage

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      role: web-frontend
+  template:
+    metadata:
+      labels:
+        role: web-frontend
+    spec:
+      volumes:
+        - name: nginx-html
+          persistentVolumeClaim:
+            claimName: nginx
+      containers:
+        - image: nginx:latest
+          name: nginx
+          volumeMounts:
+            - name: nginx-html
+              mountPath: /usr/share/nginx/html
+
