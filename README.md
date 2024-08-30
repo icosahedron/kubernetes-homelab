@@ -86,16 +86,13 @@ Now it's time to test the configuration of the cluster.
 
 Let's install a web server and see if it can read a file off the NFS share. Look in the `yaml` directory for files to deploy an nginx web server configured to read files off the NFS share.
 
-Deploy these with the following commmands:
+Deploy these with the following `helm` commmand:
 
-```bash
-sudo kubectl apply -f nfs-pv.yaml
-sudo kubectl apply -f nfs-pvc.yaml
-sudo kubectl apply -f nfs-web-deployment.yaml
-sudo kubectl apply -f nfs-web-service.yaml
+```
+helm install nginx ./nginx --namespace web --create-namespace
 ```
 
-Put a test `index.html` file in `/srv/nfs/k8s`. Save the following (or whatever you want) to that path.
+Put a test `index.html` file in `/srv/nfs/k8s/nginx`. Save the following (or whatever you want) to that path.
 
 ```
 <html>
@@ -106,9 +103,17 @@ Put a test `index.html` file in `/srv/nfs/k8s`. Save the following (or whatever 
 </body>
 </html>
 ```
-
 Use the command `curl http://localhost` to see if the web server works, and it should return the contents of the file that we put in the directory.
 
-If this is what you see, congratulations, you have set up Kubernetes cluster
-with an NFS share.
+If this is what you see, congratulations, you have set up Kubernetes cluster  with an NFS share.
+
+## Install Postgres
+
+A web server is great start, but applications need a storage or database. Installing Postgres will provide that for future
+applications installed in the cluster. To keep things simple, the cluster will only have a single instance for now.
+
+Installing postgres requires a persistent volume to store the database. Create a directory adjacent to the nginx one
+created earlier, `/srv/nfs/k8s/postgres`.
+
+
 
