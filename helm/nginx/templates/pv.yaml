@@ -4,11 +4,11 @@ metadata:
   name: nginx-nfs
 spec:
   capacity:
-    storage: 5Gi
+    storage: {{ .Values.persistence.size }}
   accessModes:
     - ReadWriteMany
   nfs:
-    server: 100.91.158.43
+    server: {{ .Values.persistence.nfs_server }}
     path: "/srv/nfs/k8s/nginx"
   mountOptions:
     - nfsvers=4.2
