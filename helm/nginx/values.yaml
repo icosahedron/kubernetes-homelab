@@ -2,4 +2,8 @@
 serviceAccount:
   name: default
 
+persistence:
+  size: 5Gi
+  nfs_server: x.x.x.x
+
 

@@ -12,7 +12,7 @@ persistence:
   accessMode: ReadWriteOnce
   size: 5Gi
   nfs:
-    server: 100.91.158.43
+    server: x.x.x.x
     path: "/srv/nfs/k8s/postgres"
 
 service:
@@ -27,6 +27,8 @@ postgresql:
   persistence:
     enabled: true
     deletePVCOnUninstall: true  # Set this to false if you want to keep the PVCs
+  labels:
+    role: db
 
 resources:
   requests:
@@ -35,4 +37,3 @@ resources:
   limits:
     cpu: 2
     memory: 3Gi
-
