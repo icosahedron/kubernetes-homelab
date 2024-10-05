@@ -58,7 +58,7 @@ smb:
   size: 25Gi
   accessMode: ReadWriteMany
 
-test-storage:
+test_storage:
   name: pvc-smb
   namespace: smb-test
   size: 10Gi
