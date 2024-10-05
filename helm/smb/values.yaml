@@ -1,0 +1,66 @@
+# values.yaml
+nameOverride: ""
+fullnameOverride: ""
+
+namespace: csi-smb-provisioner
+
+controller:
+  replicas: 1
+  image:
+    repository: registry.k8s.io/sig-storage/csi-provisioner
+    tag: v3.2.0
+  resources:
+    limits:
+      cpu: 1
+      memory: 300Mi
+    requests:
+      cpu: 10m
+      memory: 20Mi
+
+node:
+  image:
+    repository: registry.k8s.io/sig-storage/smbplugin
+    tag: v1.9.0
+  resources:
+    limits:
+      memory: 200Mi
+    requests:
+      cpu: 10m
+      memory: 20Mi
+
+livenessProbe:
+  image:
+    repository: registry.k8s.io/sig-storage/livenessprobe
+    tag: v2.7.0
+  resources:
+    limits:
+      cpu: 1
+      memory: 100Mi
+    requests:
+      cpu: 10m
+      memory: 20Mi
+
+nodeDriverRegistrar:
+  image:
+    repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+    tag: v2.5.1
+  resources:
+    limits:
+      memory: 100Mi
+    requests:
+      cpu: 10m
+      memory: 20Mi
+
+smb:
+  namespace: smb-test
+  share: "//100.127.21.13/Share"
+  readOnly: false
+  size: 25Gi
+  accessMode: ReadWriteMany
+
+test-storage:
+  name: pvc-smb
+  namespace: smb-test
+  size: 10Gi
+  pv: pv-smb
+  accessMode: ReadWriteMany

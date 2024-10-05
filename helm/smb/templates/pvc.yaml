@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ .Values.test-storage.name }}
+  namespace: {{ .Values.smb.namespace }}
+spec:
+  accessModes:
+    - {{ .Values.test-storage.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.test-storage.size }}
+  volumeName: {{ .Values.test-storage.pv }}
+  storageClassName: ""
