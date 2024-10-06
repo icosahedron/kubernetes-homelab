@@ -45,3 +45,10 @@ deploy-postgres:
 delete-postgres:
     helm uninstall postgres -n db
     -kubectl wait --for=delete pods -l role=db -n db
+
+deploy-smb:
+    helm template smb-csi helm/smb > smb-csi.yaml
+    kapp deploy -f smb-csi.yaml --app smb-csi -y
+
+delete-smb:
+    kapp delete --app smb-csi -y
