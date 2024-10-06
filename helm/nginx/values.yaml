@@ -1,9 +1,17 @@
 # values.yaml
+namespace: web
+
 serviceAccount:
   name: default
 
-persistence:
-  size: 5Gi
-  nfs_server: x.x.x.x
-
+storage:
+  pv: "smb"
+  size: 10Gi
+  nfs:
+    server: x.x.x.x
+    path: "/srv/nfs/k8s/nginx"
+  smb:
+    share: "//100.127.21.13/Share"
+    readOnly: false
+    accessMode: ReadWriteMany
 

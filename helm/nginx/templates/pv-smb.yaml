@@ -1,0 +1,27 @@
+# PV for an anonymous SMB share
+{{ if eq .Values.storage.pv "smb" }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nginx-smb
+  namespace: {{ .Values.namespace }}
+spec:
+  storageClassName: ""
+  capacity:
+    storage: {{ .Values.storage.size }}
+  accessModes:
+    - {{ .Values.storage.smb.accessMode }}
+  persistentVolumeReclaimPolicy: Retain
+  mountOptions:
+    - dir_mode=0777
+    - file_mode=0777
+    - vers=3.1.1
+    - rw
+    - guest
+  csi:
+    driver: smb.csi.k8s.io
+    readOnly: {{ .Values.storage.smb.readOnly }}
+    volumeHandle: smb-vol  # make sure it's a unique id in the cluster
+    volumeAttributes:
+      source: {{ .Values.storage.smb.share }}
+{{ end }}
