@@ -19,9 +19,13 @@ install-ingress:
     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
     kubectl rollout status deployment ingress-nginx-controller -n ingress-nginx
 
-deploy-nginx:
-    helm install nginx helm/nginx --namespace web --create-namespace
-    kubectl rollout status deployment nginx -n web
+deploy-nginx: deploy-smb
+    helm template nginx helm/nginx > nginx-helm.yaml
+    kapp deploy -f nginx-helm.yaml --app nginx -y
+    # rev 2
+    # helm install nginx helm/nginx --namespace web --create-namespace
+    # kubectl rollout status deployment nginx -n web
+    # rev 1
     # sudo kubectl apply -f yaml/nginx-nfs-pv.yaml
     # sudo kubectl apply -f yaml/nginx-nfs-pvc.yaml
     # sudo kubectl apply -f yaml/nginx-pvc-deployment.yaml
@@ -30,8 +34,11 @@ deploy-nginx:
     # sudo kubectl wait --for=condition=ready --timeout=60s svc/nginx
 
 delete-nginx:
-    helm uninstall nginx -n web
-    -kubectl wait --for=delete pods -l role=web-frontend -n web
+    kapp delete --app nginx -y
+    # rev 2
+    # helm uninstall nginx -n web
+    # -kubectl wait --for=delete pods -l role=web-frontend -n web
+    # rev 1
     # -sudo kubectl delete svc/nginx
     # -sudo kubectl delete ingress/nginx-ingress
     # -sudo kubectl delete deploy/nginx

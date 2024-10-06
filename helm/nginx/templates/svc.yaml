@@ -2,6 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: nginx
+  namespace: {{ .Values.namespace }}
 spec:
   ports:
     - port: 80
@@ -12,6 +13,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nginx-ingress
+  namespace: {{ .Values.namespace }}
   annotations:
 spec:
   ingressClassName: nginx
