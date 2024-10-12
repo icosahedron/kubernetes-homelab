@@ -1,4 +1,4 @@
-{{- if and .Values.persistence.enabled .Values.persistence.nfs -}}
+{{- if eq .Values.persistence.pv "nfs" -}}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
