@@ -1,0 +1,29 @@
+{{- if eq .Values.persistence.pv "smb" -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "postgresql.fullname" . }}-pv
+  labels:
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - {{ .Values.persistence.accessMode }}
+  {{- if .Values.persistence.storageClass }}
+  storageClassName: "{{ .Values.persistence.storageClass }}"
+  {{- end }}
+  persistentVolumeReclaimPolicy: Retain
+  mountOptions:
+    - dir_mode=0777
+    - file_mode=0777
+    - vers=3.1.1
+    - rw
+    - guest
+  csi:
+    driver: smb.csi.k8s.io
+    readOnly: {{ .Values.persistence.smb.readOnly }}
+    volumeHandle: smb-vol  # make sure it's a unique id in the cluster
+    volumeAttributes:
+      source: {{ .Values.persistence.smb.share }}
+{{- end }}

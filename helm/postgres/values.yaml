@@ -7,13 +7,18 @@ image:
 replicaCount: 1
 
 persistence:
-  enabled: true
+  pv: "local"
   storageClass: "postgres-sc"
   accessMode: ReadWriteOnce
-  size: 5Gi
+  size: 10Gi
   nfs:
     server: x.x.x.x
     path: "/srv/nfs/k8s/postgres"
+  smb:
+    share: "//100.127.21.13/Share"
+    readOnly: false
+  local:
+
 
 service:
   type: ClusterIP
@@ -28,12 +33,12 @@ postgresql:
     enabled: true
     deletePVCOnUninstall: true  # Set this to false if you want to keep the PVCs
   labels:
-    role: db
+    role: database
 
 resources:
   requests:
     cpu: 750m
-    memory: 1Gi
+    memory: 2Gi
   limits:
     cpu: 2
-    memory: 3Gi
+    memory: 4Gi

@@ -16,8 +16,6 @@ name: homelab
 nodes:
   - role: control-plane
     image: kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865
-    labels:
-      ingress-ready: true
     extraPortMappings:
     - containerPort: 80
       hostPort: 8080
@@ -27,13 +25,8 @@ nodes:
     extraMounts:
       - hostPath: /mnt/mac/Users/jaykint/Projects/kubernetes-homelab/storage
         containerPath: /storage
-    labels:
-      storage: high-capacity
-      role: database
   - role: worker
     image: kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865
-    labels:
-      cpu: high-capacity
     extraMounts:
       - hostPath: /mnt/mac/Users/jaykint/Projects/kubernetes-homelab/storage
         containerPath: /storage
