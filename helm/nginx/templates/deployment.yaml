@@ -23,4 +23,5 @@ spec:
           volumeMounts:
             - name: nginx-html
               mountPath: /usr/share/nginx/html
+              subPath: "nginx"
 

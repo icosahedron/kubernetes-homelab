@@ -16,6 +16,7 @@ install-nfs:
     # sudo kubectl rollout status deployment 
 
 install-ingress:
+    # kapp deploy -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml --app ingress-nginx -y
     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
     kubectl rollout status deployment ingress-nginx-controller -n ingress-nginx
 
@@ -53,7 +54,7 @@ delete-postgres:
     helm uninstall postgres -n db
     -kubectl wait --for=delete pods -l role=db -n db
 
-deploy-smb:
+deploy-smb: install-ingress
     helm template smb-csi helm/smb > smb-csi.yaml
     kapp deploy -f smb-csi.yaml --app smb-csi -y
 
