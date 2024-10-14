@@ -1,4 +1,6 @@
 # values.yaml
+namespace: db
+
 image:
   repository: postgres
   tag: 16.1

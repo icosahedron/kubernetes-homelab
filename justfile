@@ -20,43 +20,29 @@ install-ingress:
     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
     kubectl rollout status deployment ingress-nginx-controller -n ingress-nginx
 
-deploy-nginx: deploy-smb
+deploy-nginx: deploy-smb install-ingress
     helm template nginx helm/nginx > nginx-helm.yaml
     kapp deploy -f nginx-helm.yaml --app nginx -y
-    # rev 2
-    # helm install nginx helm/nginx --namespace web --create-namespace
-    # kubectl rollout status deployment nginx -n web
-    # rev 1
-    # sudo kubectl apply -f yaml/nginx-nfs-pv.yaml
-    # sudo kubectl apply -f yaml/nginx-nfs-pvc.yaml
-    # sudo kubectl apply -f yaml/nginx-pvc-deployment.yaml
-    # sudo kubectl wait --for=condition=available --timeout=60s deploy/nginx
-    # sudo kubectl apply -f yaml/nginx-service.yaml
-    # sudo kubectl wait --for=condition=ready --timeout=60s svc/nginx
 
 delete-nginx:
     kapp delete --app nginx -y
-    # rev 2
-    # helm uninstall nginx -n web
-    # -kubectl wait --for=delete pods -l role=web-frontend -n web
-    # rev 1
-    # -sudo kubectl delete svc/nginx
-    # -sudo kubectl delete ingress/nginx-ingress
-    # -sudo kubectl delete deploy/nginx
-    # -sudo kubectl delete pvc/nginx
-    # -sudo kubectl delete pv/nginx-nfs
 
 deploy-postgres:
-    helm install postgres helm/postgres --namespace db --create-namespace
-    kubectl rollout status sts postgres-postgresql -n db
+    helm template postgres helm/postgres > postgres-helm.yaml
+    kapp deploy -f postgres-helm.yaml --app postgres -y
+    # helm install postgres helm/postgres --namespace db --create-namespace
+    # kubectl rollout status sts postgres-postgresql -n db
 
 delete-postgres:
-    helm uninstall postgres -n db
-    -kubectl wait --for=delete pods -l role=db -n db
+    kapp delete --app postgres -y
+    # helm uninstall postgres -n db
+    # -kubectl wait --for=delete pods -l role=db -n db
 
-deploy-smb: install-ingress
+deploy-smb:
     helm template smb-csi helm/smb > smb-csi.yaml
     kapp deploy -f smb-csi.yaml --app smb-csi -y
 
 delete-smb:
     kapp delete --app smb-csi -y
+
+
