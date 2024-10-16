@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-gitea
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: 1
   selector:
@@ -21,8 +22,9 @@ spec:
         volumeMounts:
         - name: gitea-data
           mountPath: /data
+          subPath: gitea
       volumes:
       - name: gitea-data
         persistentVolumeClaim:
-          claimName: {{ .Release.Name }}-gitea-pvc
+          claimName: gitea-{{ .Values.storage.pv }}-pvc
 

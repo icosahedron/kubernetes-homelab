@@ -1,21 +1,16 @@
 # values.yaml
+namespace: vcs
+
 gitea:
   image:
     repository: gitea/gitea
-    tag: 1.20.0
+    tag: 1.22
   service:
     type: ClusterIP
     port: 3000
   ingress:
     enabled: true
     host: gitea.icosahedron.io
-  persistence:
-    enabled: true
-    size: 5Gi
-    storageClass: nfs-client
-    nfs:
-      server: 100.91.158.43
-      path: "/srv/nfs/k8s/gitea"
   database:
     type: postgres
     host: postgres-postgresql.db.svc.cluster.local
@@ -25,6 +20,18 @@ gitea:
     password: gitea
   postgresql:
     namespace: db
-    secretName: postgres-postgresql # Name of the secret containing PostgreSQL passwords
-    secretKey: postgres-password # Key in the secret for the PostgreSQL admin password
+    secretName: postgres-postgresql-secret # Name of the secret containing PostgreSQL passwords
+    secretKey: POSTGRES_PASSWORD # Key in the secret for the PostgreSQL admin password
 
+storage:
+  pv: "smb"
+  size: 10Gi
+  storageClass: gitea-sc
+  nfs:
+    server: x.x.x.x
+    path: "/srv/nfs/k8s/nginx"
+    accessMode: ReadWriteOnce
+  smb:
+    share: "//100.127.21.13/Share"
+    readOnly: false
+    accessMode: ReadWriteMany
