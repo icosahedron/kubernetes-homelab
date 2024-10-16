@@ -1,0 +1,19 @@
+# templates/pv.yaml
+{{ if eq .Values.storage.pv "nfs" }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gitea-{{ .Values.storage.pv }}-pv
+  namespace: {{ .Values.namespace }}
+spec:
+  capacity:
+    storage: {{ .Values.storage.size }}
+  storageClassName: {{ .Values.storage.storageClass }}
+  accessModes:
+    - {{ .Values.storage.nfs.accessMode }}
+  nfs:
+    server: {{ .Values.storage.nfs.server }}
+    path: {{ .Values.storage.nfs.path }}
+  mountOptions:
+    - nfsvers=4.2
+{{ end }}

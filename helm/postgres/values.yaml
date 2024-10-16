@@ -21,7 +21,6 @@ persistence:
     readOnly: false
   local:
 
-
 service:
   type: ClusterIP
   port: 5432
