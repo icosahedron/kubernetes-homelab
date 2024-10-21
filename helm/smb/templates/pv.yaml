@@ -12,11 +12,17 @@ spec:
     - {{ .Values.smb.accessMode }}
   persistentVolumeReclaimPolicy: Retain
   mountOptions:
-    - dir_mode=0777
-    - file_mode=0777
+    - dir_mode=0644
+    - file_mode=0644
     - vers=3.1.1
     - rw
     - guest
+    - noperm
+    # - dir_mode=0777
+    # - file_mode=0777
+    # - vers=3.1.1
+    # - rw
+    # - guest
   csi:
     driver: smb.csi.k8s.io
     readOnly: {{ .Values.smb.readOnly }}

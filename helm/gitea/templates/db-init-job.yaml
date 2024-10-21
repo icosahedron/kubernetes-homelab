@@ -13,7 +13,7 @@ spec:
     metadata:
       name: {{ .Release.Name }}-db-init
     spec:
-      serviceAccountName: {{ .Release.Name }}-db-job-account
+      # serviceAccountName: {{ .Release.Name }}-db-job-account
       restartPolicy: Never
       containers:
       - name: db-init
@@ -21,7 +21,7 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
         - |
-          PGPASSWORD=$POSTGRES_PASSWORD psql -h $DB_HOST -p $DB_PORT -U postgres <<EOF
+          PGPASSWORD=$POSTGRES_ADMIN_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $POSTGRES_ADMIN <<EOF
           DO \$\$
           BEGIN
             IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$DB_USER') THEN
@@ -44,7 +44,9 @@ spec:
           value: {{ .Values.gitea.database.password }}
         - name: DB_NAME
           value: {{ .Values.gitea.database.name }}
-        - name: POSTGRES_PASSWORD
+        - name: POSTGRES_ADMIN
+          value: {{ .Values.gitea.postgresql.admin }}
+        - name: POSTGRES_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.gitea.postgresql.secretName }}

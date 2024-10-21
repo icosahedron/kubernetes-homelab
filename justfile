@@ -15,12 +15,23 @@ install-nfs:
     helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=100.91.158.43 --set nfs.path=/srv/nfs/k8s
     # sudo kubectl rollout status deployment 
 
+install-smb:
+    helm template smb-csi helm/smb > smb-csi.yaml
+    kapp deploy -f smb-csi.yaml --app smb-csi -y
+
+delete-smb:
+    kapp delete --app smb-csi -y
+
 install-ingress:
     # kapp deploy -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml --app ingress-nginx -y
     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
     kubectl rollout status deployment ingress-nginx-controller -n ingress-nginx
 
-deploy-nginx: deploy-smb install-ingress
+install-reflector:
+    kapp deploy -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml --app secret-config-reflector -y
+    # kubectl -n kube-system apply -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
+
+deploy-nginx: install-smb install-ingress
     helm template nginx helm/nginx > nginx-helm.yaml
     kapp deploy -f nginx-helm.yaml --app nginx -y
 
@@ -38,11 +49,11 @@ delete-postgres:
     # helm uninstall postgres -n db
     # -kubectl wait --for=delete pods -l role=db -n db
 
-deploy-smb:
-    helm template smb-csi helm/smb > smb-csi.yaml
-    kapp deploy -f smb-csi.yaml --app smb-csi -y
+deploy-gitea: install-smb install-ingress install-reflector deploy-postgres
+    helm template gitea helm/gitea > gitea-helm.yaml
+    kapp deploy -f gitea-helm.yaml --app gitea -y
 
-delete-smb:
-    kapp delete --app smb-csi -y
+delete-gitea:
+    kapp delete --app gitea -y
 
-
+deploy-secret-test:

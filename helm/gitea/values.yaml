@@ -20,8 +20,9 @@ gitea:
     password: gitea
   postgresql:
     namespace: db
+    admin: homelab
     secretName: postgres-postgresql-secret # Name of the secret containing PostgreSQL passwords
-    secretKey: POSTGRES_PASSWORD # Key in the secret for the PostgreSQL admin password
+    secretKey: POSTGRES_ADMIN_PASSWORD # Key in the secret for the PostgreSQL admin password
 
 storage:
   pv: "smb"

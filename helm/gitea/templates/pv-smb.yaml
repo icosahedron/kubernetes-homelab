@@ -13,11 +13,16 @@ spec:
     - {{ .Values.storage.smb.accessMode }}
   persistentVolumeReclaimPolicy: Retain
   mountOptions:
-    - dir_mode=0777
-    - file_mode=0777
+    - dir_mode=0644
+    - file_mode=0644
     - vers=3.1.1
     - rw
     - guest
+    - uid=git
+    - gid=git
+    - forceuid
+    - forcegid
+    - noperm
   csi:
     driver: smb.csi.k8s.io
     readOnly: {{ .Values.storage.smb.readOnly }}
