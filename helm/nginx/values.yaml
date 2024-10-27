@@ -5,11 +5,11 @@ serviceAccount:
   name: default
 
 storage:
-  pv: "smb"
+  pv: "nfs"
   size: 10Gi
   nfs:
-    server: x.x.x.x
-    path: "/srv/nfs/k8s/nginx"
+    server: nfs-server.default.svc.cluster.local
+    path: / # "/exports/nginx"
   smb:
     share: "//100.127.21.13/Share"
     readOnly: false
