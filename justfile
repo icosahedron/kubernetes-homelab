@@ -11,9 +11,17 @@ create-cluster:
 delete-cluster:
     kind delete cluster -n homelab
 
-install-nfs:
+install-nfs-subdir:
     helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=100.91.158.43 --set nfs.path=/srv/nfs/k8s
     # sudo kubectl rollout status deployment 
+
+install-nfs-server:
+    # kubectl apply -f yaml/nfs-server.yaml
+    kapp deploy --app nfs-server -f yaml/nfs-server.yaml -y
+    helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+    helm template csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system --version v4.9.0 > nfs-helm.yaml
+    kapp deploy --app csi-driver-nfs -f nfs-helm.yaml -y
+    # kubectl --namespace=kube-system get pods --selector="app.kubernetes.io/instance=csi-driver-nfs" --watch
 
 install-smb:
     helm template smb-csi helm/smb > smb-csi.yaml
@@ -31,7 +39,7 @@ install-reflector:
     kapp deploy -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml --app secret-config-reflector -y
     # kubectl -n kube-system apply -f https://github.com/emberstack/kubernetes-reflector/releases/latest/download/reflector.yaml
 
-deploy-nginx: install-smb install-ingress
+deploy-nginx: install-nfs-server install-ingress
     helm template nginx helm/nginx > nginx-helm.yaml
     kapp deploy -f nginx-helm.yaml --app nginx -y
 

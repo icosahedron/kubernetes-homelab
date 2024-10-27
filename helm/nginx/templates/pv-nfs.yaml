@@ -3,16 +3,21 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: nginx-nfs
-  namespace {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   capacity:
     storage: {{ .Values.storage.size }}
   accessModes:
-    - ReadWriteMany
-  nfs:
-    server: {{ .Values.storage.nfs.server }}
-    path: {{ .Values.storage.nfs.path }}
+    - ReadOnlyMany
   mountOptions:
-    - nfsvers=4.2
+    - nfsvers=4.1
+  csi:
+    driver: nfs.csi.k8s.io
+    # volumeHandle format: {nfs-server-address}#{sub-dir-name}#{share-name}
+    # make sure this value is unique for every share in the cluster
+    volumeHandle: {{ .Values.storage.nfs.server }}#{{ .Values.storage.nfs.path }}#nginx
+    volumeAttributes:
+      server: {{ .Values.storage.nfs.server }}
+      share: {{ .Values.storage.nfs.path }}
 {{ end }}
 
