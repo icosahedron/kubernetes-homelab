@@ -8,7 +8,7 @@ create-cluster:
     kind create cluster --config yaml/config.kind.yaml
     # -sudo helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
 
-delete-cluster:
+delete-cluster: delete-nginx
     kind delete cluster -n homelab
 
 install-nfs-subdir:
@@ -18,9 +18,11 @@ install-nfs-subdir:
 install-nfs-server:
     # kubectl apply -f yaml/nfs-server.yaml
     kapp deploy --app nfs-server -f yaml/nfs-server.yaml -y
+    # helm template nfs-server helm/nfs-server --namespace default > nfs-server-helm.yaml
+    # kapp deploy --app nfs-server -f nfs-server-helm.yaml -y
     helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
-    helm template csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system --version v4.9.0 > nfs-helm.yaml
-    kapp deploy --app csi-driver-nfs -f nfs-helm.yaml -y
+    helm template csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system --version v4.9.0 > nfs-csi-driver-helm.yaml
+    kapp deploy --app csi-driver-nfs -f nfs-csi-driver-helm.yaml -y
     # kubectl --namespace=kube-system get pods --selector="app.kubernetes.io/instance=csi-driver-nfs" --watch
 
 install-smb:
