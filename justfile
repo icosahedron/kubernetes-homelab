@@ -17,9 +17,9 @@ install-nfs-subdir:
 
 install-nfs-server:
     # kubectl apply -f yaml/nfs-server.yaml
-    kapp deploy --app nfs-server -f yaml/nfs-server.yaml -y
-    # helm template nfs-server helm/nfs-server --namespace default > nfs-server-helm.yaml
-    # kapp deploy --app nfs-server -f nfs-server-helm.yaml -y
+    # kapp deploy --app nfs-server -f yaml/nfs-server.yaml -y
+    helm template nfs-server helm/nfs-server --namespace default > nfs-server-helm.yaml
+    kapp deploy --app nfs-server -f nfs-server-helm.yaml -y
     helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
     helm template csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system --version v4.9.0 > nfs-csi-driver-helm.yaml
     kapp deploy --app csi-driver-nfs -f nfs-csi-driver-helm.yaml -y
