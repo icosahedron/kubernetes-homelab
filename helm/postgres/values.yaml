@@ -9,13 +9,12 @@ image:
 replicaCount: 1
 
 persistence:
-  pv: "local"
-  storageClass: "postgres-sc"
+  pv: nfs
   accessMode: ReadWriteOnce
   size: 10Gi
   nfs:
-    server: x.x.x.x
-    path: "/srv/nfs/k8s/postgres"
+    server: nfs-server.storage.svc.cluster.local
+    path: / # "/exports/nginx"
   smb:
     share: "//100.127.21.13/Share"
     readOnly: false
@@ -28,7 +27,7 @@ service:
 postgresql:
   username: homelab
   database: homelab
-  password: homelab # You should override this in a separate values file
+  password: homelab # You should override this in a separate values file or protect this with a secret such as kubeseal
   initdbArgs: "--data-checksums"
   persistence:
     enabled: true

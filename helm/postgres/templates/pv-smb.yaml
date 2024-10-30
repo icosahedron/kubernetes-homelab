@@ -11,9 +11,7 @@ spec:
     storage: {{ .Values.persistence.size }}
   accessModes:
     - {{ .Values.persistence.accessMode }}
-  {{- if .Values.persistence.storageClass }}
-  storageClassName: "{{ .Values.persistence.storageClass }}"
-  {{- end }}
+  storageClassName: postgres-smb
   persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - dir_mode=0777

@@ -29,19 +29,17 @@ spec:
             - secretRef:
                 name: {{ include "postgresql.fullname" . }}-secret
           volumeMounts:
-            - name: data-{{ .Values.persistence.pv }}
+            - name: {{ include "postgresql.fullname" . }}-pv
               mountPath: /var/lib/postgresql/data
               subPath: postgresql-db
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
   volumeClaimTemplates:
     - metadata:
-        name: data-{{ .Values.persistence.pv }}
+        name: {{ include "postgresql.fullname" . }}-pv
       spec:
         accessModes: [ "{{ .Values.persistence.accessMode }}" ]
-        {{- if .Values.persistence.storageClass }}
-        storageClassName: "{{ .Values.persistence.storageClass }}"
-        {{- end }}
+        storageClassName: postgres-{{ .Values.persistence.pv }}
         resources:
           requests:
             storage: {{ .Values.persistence.size }}
