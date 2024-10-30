@@ -20,9 +20,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - {{ .Values.persistence.accessMode }}
-  {{- if .Values.persistence.storageClass }}
-  storageClassName: "{{ .Values.persistence.storageClass }}"
-  {{- end }}
+  storageClassName: postgres-local
   persistentVolumeReclaimPolicy: Retain
   local:
     path: /storage

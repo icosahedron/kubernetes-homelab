@@ -8,7 +8,7 @@ create-cluster:
     kind create cluster --config yaml/config.kind.yaml
     # -sudo helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
 
-delete-cluster: delete-nginx
+delete-cluster: delete-nginx delete-postgres
     kind delete cluster -n homelab
 
 install-nfs-subdir:
@@ -48,7 +48,7 @@ deploy-nginx: install-nfs-server install-ingress
 delete-nginx:
     kapp delete --app nginx -y
 
-deploy-postgres:
+deploy-postgres: install-nfs-server
     helm template postgres helm/postgres > postgres-helm.yaml
     kapp deploy -f postgres-helm.yaml --app postgres -y
     # helm install postgres helm/postgres --namespace db --create-namespace

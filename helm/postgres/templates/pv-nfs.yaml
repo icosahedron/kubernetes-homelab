@@ -11,11 +11,17 @@ spec:
     storage: {{ .Values.persistence.size }}
   accessModes:
     - {{ .Values.persistence.accessMode }}
-  {{- if .Values.persistence.storageClass }}
-  storageClassName: "{{ .Values.persistence.storageClass }}"
-  {{- end }}
+  storageClassName: postgres-nfs
   persistentVolumeReclaimPolicy: Retain
-  nfs:
-    server: {{ .Values.persistence.nfs.server }}
-    path: {{ .Values.persistence.nfs.path }}
+  csi:
+    driver: nfs.csi.k8s.io
+    # volumeHandle format: {nfs-server-address}#{sub-dir-name}#{share-name}
+    # make sure this value is unique for every share in the cluster
+    volumeHandle: {{ .Values.persistence.nfs.server }}#{{ .Values.persistence.nfs.path }}#database
+    volumeAttributes:
+      server: {{ .Values.persistence.nfs.server }}
+      share: {{ .Values.persistence.nfs.path }}
+  # nfs:
+  #   server: {{ .Values.persistence.nfs.server }}
+  #   path: {{ .Values.persistence.nfs.path }}
 {{- end }}
