@@ -4,7 +4,7 @@ set fallback
 default:
     @just --choose
 
-create-cluster:
+create-cluster: check-tools
     kind create cluster --config yaml/config.kind.yaml
     # -sudo helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
 
@@ -66,4 +66,39 @@ deploy-gitea: install-smb install-ingress install-reflector deploy-postgres
 delete-gitea:
     kapp delete --app gitea -y
 
-deploy-secret-test:
+# Check if required tools are installed
+check-tools:
+    #!/usr/bin/env bash
+    REQUIRED_TOOLS=("kind" "docker" "helm" "kapp")
+    MISSING_TOOLS=()
+
+    # Function to check if a command exists
+    check_command() {
+        if ! command -v "$1" >/dev/null 2>&1; then
+            MISSING_TOOLS+=("$1")
+            return 1
+        fi
+        return 0
+    }
+
+    # Check each required tool
+    echo "Checking for required tools..."
+    for tool in "${REQUIRED_TOOLS[@]}"; do
+        if check_command "$tool"; then
+            echo "✓ $tool is installed"
+        else
+            echo "✗ $tool is not installed"
+        fi
+    done
+
+    # If any tools are missing, exit with error
+    if [ ${#MISSING_TOOLS[@]} -ne 0 ]; then
+        echo -e "\nError: The following required tools are missing:"
+        for tool in "${MISSING_TOOLS[@]}"; do
+            echo "- $tool"
+        done
+        exit 1
+    fi
+
+    echo -e "\nAll required tools are installed!"
+
