@@ -26,7 +26,7 @@ nodes:
   - role: worker
     image: kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865
     extraMounts:
-      - hostPath: /mnt/mac/Users/jaykint/Projects/kubernetes-homelab/storage
+      - hostPath: ./storage
         containerPath: /storage
     labels:
       storage: high-capacity
@@ -36,5 +36,5 @@ nodes:
     labels:
       cpu: high-capacity
     extraMounts:
-      - hostPath: /mnt/mac/Users/jaykint/Projects/kubernetes-homelab/storage
+      - hostPath: ./storage
         containerPath: /storage
