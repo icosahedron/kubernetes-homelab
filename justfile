@@ -59,7 +59,7 @@ delete-postgres:
     # helm uninstall postgres -n db
     # -kubectl wait --for=delete pods -l role=db -n db
 
-deploy-gitea: install-smb install-ingress install-reflector deploy-postgres
+deploy-gitea: install-nfs-server install-ingress install-reflector deploy-postgres
     helm template gitea helm/gitea > gitea-helm.yaml
     kapp deploy -f gitea-helm.yaml --app gitea -y
 
