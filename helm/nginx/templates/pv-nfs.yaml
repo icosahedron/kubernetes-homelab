@@ -20,4 +20,3 @@ spec:
       server: {{ .Values.storage.nfs.server }}
       share: {{ .Values.storage.nfs.path }}
 {{ end }}
-

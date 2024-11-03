@@ -8,12 +8,17 @@ metadata:
 spec:
   capacity:
     storage: {{ .Values.storage.size }}
-  storageClassName: {{ .Values.storage.storageClass }}
+  storageClassName: gitea-{{ .Values.storage.pv }}
   accessModes:
-    - {{ .Values.storage.nfs.accessMode }}
-  nfs:
-    server: {{ .Values.storage.nfs.server }}
-    path: {{ .Values.storage.nfs.path }}
+    - {{ .Values.storage.accessMode }}
+  csi:
+    driver: nfs.csi.k8s.io
+    # volumeHandle format: {nfs-server-address}#{sub-dir-name}#{share-name}
+    # make sure this value is unique for every share in the cluster
+    volumeHandle: {{ .Values.storage.nfs.server }}#{{ .Values.storage.nfs.path }}#gitea
+    volumeAttributes:
+      server: {{ .Values.storage.nfs.server }}
+      share: {{ .Values.storage.nfs.path }}
   mountOptions:
-    - nfsvers=4.2
+    - nfsvers=4.1
 {{ end }}

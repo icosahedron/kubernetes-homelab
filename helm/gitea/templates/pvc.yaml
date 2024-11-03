@@ -5,9 +5,9 @@ metadata:
   name: gitea-{{ .Values.storage.pv }}-pvc
   namespace: {{ .Values.namespace }}
 spec:
-  storageClassName: {{ .Values.storage.storageClass }}
+  storageClassName: gitea-{{ .Values.storage.pv }}
   accessModes:
-    - ReadWriteMany
+    - {{ .Values.storage.accessMode }}
   resources:
     requests:
       storage: {{ .Values.storage.size }}

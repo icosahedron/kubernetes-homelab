@@ -10,7 +10,7 @@ gitea:
     port: 3000
   ingress:
     enabled: true
-    host: gitea.icosahedron.io
+    host: gitea.icosahedron.dev
   database:
     type: postgres
     host: postgres-postgresql.db.svc.cluster.local
@@ -25,14 +25,13 @@ gitea:
     secretKey: POSTGRES_ADMIN_PASSWORD # Key in the secret for the PostgreSQL admin password
 
 storage:
-  pv: "smb"
+  pv: "nfs"
   size: 10Gi
-  storageClass: gitea-sc
+  accessMode: ReadWriteMany
   nfs:
-    server: x.x.x.x
-    path: "/srv/nfs/k8s/nginx"
-    accessMode: ReadWriteOnce
+    server: nfs-server.storage.svc.cluster.local
+    path: /
   smb:
-    share: "//100.127.21.13/Share"
+    share: "//smb-server.storage.svc.cluster.local/Share"
     readOnly: false
-    accessMode: ReadWriteMany
+

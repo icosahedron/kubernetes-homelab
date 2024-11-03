@@ -1,3 +1,8 @@
 .flox
 storage
 *-helm.yaml
+.DS_Store
+.vagrant
+Vagrantfile
+helm/cloudnative-pg
+helm
