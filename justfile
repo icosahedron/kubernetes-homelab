@@ -7,7 +7,7 @@ default:
 create-cluster: check-tools
     kind create cluster --config yaml/config.kind.yaml
 
-delete-cluster: delete-nginx delete-postgres
+delete-cluster: delete-gitea delete-nginx delete-postgres 
     kind delete cluster -n homelab
 
 install-nfs-subdir:

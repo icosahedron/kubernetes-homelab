@@ -5,4 +5,3 @@ storage
 .vagrant
 Vagrantfile
 helm/cloudnative-pg
-helm
