@@ -6,11 +6,11 @@ metadata:
   name: gitea-{{ .Values.storage.pv }}-pv
   namespace: {{ .Values.namespace }}
 spec:
-  storageClassName: {{ .Values.storage.storageClass }}
+  storageClassName: gitea-{{ .Values.storage.pv }}
   capacity:
     storage: {{ .Values.storage.size }}
   accessModes:
-    - {{ .Values.storage.smb.accessMode }}
+    - {{ .Values.storage.accessMode }}
   persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - dir_mode=0644

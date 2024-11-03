@@ -19,7 +19,13 @@ spec:
         storage: high-capacity
       containers:
         - name: nfs-server
-          image: itsthenetwork/nfs-server-alpine:latest-arm
+          {{- if eq .Values.architecture "aarch64" }}
+          image: {{ .Values.image.aarch64 }}
+          {{- else if eq .Values.architecture "x86_64" }}
+          image: {{ .Values.image.x86_64 }}
+          {{- else }}
+          image: {{ fail "Unknown architecture for NFS server image" }}
+          {{- end }}
           env:
             - name: SHARED_DIRECTORY
               value: "/exports"

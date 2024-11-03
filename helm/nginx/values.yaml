@@ -13,5 +13,5 @@ storage:
   smb:
     share: "//100.127.21.13/Share"
     readOnly: false
-    accessMode: ReadWriteMany
+
 

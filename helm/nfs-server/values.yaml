@@ -1,7 +1,5 @@
 namespace: storage
 
 image:
-  arm:
-    image: itsthenetwork/nfs-server-alpine:latest-arm
-  x64:
-    image: itsthenetwork/nfs-server-alpine:latest
+  aarch64: itsthenetwork/nfs-server-alpine:latest-arm
+  x86_64: itsthenetwork/nfs-server-alpine:latest
