@@ -1,7 +1,0 @@
-# # templates/db-job-rbac.yaml
-# apiVersion: v1
-# kind: ServiceAccount
-# metadata:
-#   name: {{ .Release.Name }}-db-job-account
-#   namespace: {{ .Values.namespace }}
-
