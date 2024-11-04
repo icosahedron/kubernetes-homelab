@@ -1,98 +1,110 @@
 # Set up a Web Server in a Kubernetes Cluster in Docker with NFS Shares
 
-# **A Homelab**
+# A Homelab
 
 Setting up a homelab is a great way to learn about technologies.
 
-This homelab is set up using [KinD](https://kind.sigs.k8s.io/), the Kubernetes in Docker version of K8s, on an Ubuntu 24.04 VM. All nodes will be on the same VM in docker containers.
+This homelab is set up using [KinD](https://kind.sigs.k8s.io/), 
+the Kubernetes in Docker version of K8s, on an Ubuntu 24.04 VM. 
+All nodes will be on the same VM in docker containers.
 
-Networking is on a [Tailscale](https://tailscale.com/) VPN, so each machine has an IP address of 100.x.x.x.
+I put this on Github for permanence reasons, but also so people 
+could play with it and learn from it perhaps.
 
-The [Github repo](notion://www.notion.so/icosahedron20/Archive-5b2e656921644fb1be2b87059c4d1db7?p=7c1efe1091e64c2d97113af4ab90ae9f&pm=s) for this configuration contains the yaml files referenced in this article.
+## Tools
 
-## **Install Docker for Containers**
+A number of tools are required to install the cluster. I've used [Homebrew](https://brew.sh) to manage these.
 
-Docker is required for this configuration, so install it if it's not available. See the [official Docker documentation](https://docs.docker.com/engine/install/ubuntu) for instructions on installing Docker.
+* [just](https://just.systems/) - convenient command runner with needing separate scripts
+* docker - container management (see below)
+* [kind](https://kind.sigs.k8s.io/) - K8s cluster in Docker containers
+* [helm](https://helm.sh/) - application template
+* [kapp](https://carvel.dev/kapp/) - application installer (use this instead of helm because of resource watching)
 
-## **Install NFS for Persistent Volumes**
+## Install Docker for Containers
 
-NFS is a common provider of K8s persistent volumes. Azure and AWS (and probably Google) use NFS to mount persistent volumes (among other tech).
+Docker is required for this configuration, so install it if it's not available. 
+See the [official Docker documentation](https://docs.docker.com/engine/install/ubuntu) 
+for instructions on installing Docker.
 
-This homelab will create an NFS server and mount it as a client on the same VM.
+## Create the cluster
 
-Creating this server is only to approximate a cloud environment somewhat.
-
-### **Export the NFS directory**
-
-Create the directory that will serve the files via NFS:
-
-```
-mkdir -p /srv/nfs/k8s
-```
-
-Create or add to the /etc/exports file the entry:
-
-```
-/srv/nfs/k8s 172.0.0.0/8(rw,sync,no_subtree_check,no_root_squash)
-```
-
-This tells the NFS server that IP addresses in Docker's IP range (172.x.x.x) are allowed to mount this directory, along with some security options.
-
-Restart the NFS server with `sudo systemctl restart nfs-kernel-server`.
-
-(Instructions taken from [LearnLinux.TV](https://www.learnlinux.tv/how-to-set-up-an-nfs-server-on-ubuntu-complete-with-autofs/).)
-
-## **Create the cluster**
-
-To bring up the cluster, use the `config.kind.yaml` file in the `yaml` directory.
+To bring up the cluster, use the just command line runner.
 
 ```
-kind create cluster --config yaml/config.kind.yaml
+just create-cluster
 ```
 
 This will bring up the cluster with a control plane and two workers (as defined
-at the time of this writing).
+at the time of this writing) with nothing else installed.
 
-## **Install the Ingress**
+The config file used is `yaml/config.kind.yaml`.
 
-Next, install the `ingress-nginx` ingress controller to handle network traffic into the cluster.
+## Cluster Storage
 
-`kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml`
+Storage for the cluster is handled by an in-cluster NFS server. The NFS server
+is mapped to the `storage` subdirectory in the cloned repo. Installing the apps will
+create the necessary directories under the storage directory.
 
-This will install the most recent version of `ingress-nginx` from the github repo directly.
+Each PV for the applications so far has been set to 'retain', so configuration
+changes and redeployments of applications below shouldn't erase any data.
 
-## **Install NFS Provisioner**
+The storage should be installed when an application is installed, but by itself
+can be installed with `just install-nfs-server`.
 
-Helm is required to install the provisioner for NFS, so install it first with `sudo apt install helm`.
+(Instructions inspired by (CSI Driver NFS Example)[https://github.com/kubernetes-csi/csi-driver-nfs/blob/master/deploy/example/nfs-provisioner/README.md].)
 
-Once helm is installed, the NFS provisioner can be installed with configuration information about the NFS server and export path to use.
+## Install Applications
 
-In this cluster, the command would look like
+There are currently 3 applications that can be deployed: Nginx (2 instances), Postgres, and Gitea.
 
-```
-helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
-helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --set nfs.server=100.x.x.x \
-    --set nfs.path=/srv/nfs/k8s
-```
+Installing each app will install its dependencies (e.g. Gitea relies on Postgres).
 
-since we have previously exported the `/srv/nfs/k8s` directory in the `/etc/exports` file.
+Uninstalling each app will remove the kubernetes resources, but not the files/storage
+for each one. Feel free to reconfigure and redeploy each app as desired.
 
-(Instructions from their [Github repo](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner).)
+### Nginx
 
-## **Test the website**
+Install with `just deploy-nginx`. Uninstall with `just delete-nginx`.
+
+This is a simple installation that will serve whatever is in the `storage/nginx` directory.
+A default "Hello, world" index.html file is in this directory. Just put whatever files you want here and they should be served.
+
+Additional hosts/sites can be configured with ingress resources.
+
+### Postgres
+
+Install with `just deploy-postgres`. Uninstall with `just delete-postgres`.
+
+This is a vanilla installation with the admin account 'homelab' and password 'homelab'.
+
+There is no LoadBalancer or NodePort configured for it, so a port-forward needs 
+to be used to connect to the database from outside the cluster.
+
+In cluster the service name is `postgres-postgresql.db.svc.cluster.local` and port is 5432.
+
+### Gitea
+
+Install with `just deploy-gitea`. Uninstall with `just delete-gitea`.
+
+An empty instance of Gitea is installed. It includes an init job that will initialize 
+the Postgres database, but the installation set up still has to be done.
+
+The assumption is to use the in-cluster Postgres database, which is initialized with
+the appropriate roles and database created. The name is gitea/gitea. 
+
+This is not mandatory. You can use the SQLite database if you wish.
+
+The ingress is configured to forward host `gitea.icosahedron.dev` to port 3000
+to the gitea pod.
+
+## Test the cluster
 
 Now it's time to test the configuration of the cluster.
 
 Let's install a web server and see if it can read a file off the NFS share. Look in the `yaml` directory for files to deploy an nginx web server configured to read files off the NFS share.
 
-Deploy these with the following `helm` commmand:
-
-```
-helm install nginx ./nginx --namespace web --create-namespace
-```
-
-Put a test `index.html` file in `/srv/nfs/k8s/nginx`. Save the following (or whatever you want) to that path.
+Put a test `index.html` file in `./storage/nginx`. Save the following (or whatever you want) to that path.
 
 ```
 <html>
@@ -103,17 +115,7 @@ Put a test `index.html` file in `/srv/nfs/k8s/nginx`. Save the following (or wha
 </body>
 </html>
 ```
+
 Use the command `curl http://localhost` to see if the web server works, and it should return the contents of the file that we put in the directory.
 
-If this is what you see, congratulations, you have set up Kubernetes cluster  with an NFS share.
-
-## Install Postgres
-
-A web server is great start, but applications need a storage or database. Installing Postgres will provide that for future
-applications installed in the cluster. To keep things simple, the cluster will only have a single instance for now.
-
-Installing postgres requires a persistent volume to store the database. Create a directory adjacent to the nginx one
-created earlier, `/srv/nfs/k8s/postgres`.
-
-
-
+If this is what you see, congratulations, you have set up Kubernetes cluster with an NFS share.
