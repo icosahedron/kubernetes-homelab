@@ -5,11 +5,12 @@
 Setting up a homelab is a great way to learn about technologies.
 
 This homelab is set up using [KinD](https://kind.sigs.k8s.io/), 
-the Kubernetes in Docker version of K8s, on an Ubuntu 24.04 VM. 
+the Kubernetes in Docker version of K8s, on an Ubuntu 24.04 VM in Hyper-V. 
 All nodes will be on the same VM in docker containers.
 
 I put this on Github for permanence reasons, but also so people 
-could play with it and learn from it perhaps.
+could learn from it perhaps. File issues with problems or improvements
+as fitting.
 
 ## Tools
 
@@ -52,7 +53,7 @@ changes and redeployments of applications below shouldn't erase any data.
 The storage should be installed when an application is installed, but by itself
 can be installed with `just install-nfs-server`.
 
-(Instructions inspired by (CSI Driver NFS Example)[https://github.com/kubernetes-csi/csi-driver-nfs/blob/master/deploy/example/nfs-provisioner/README.md].)
+(Instructions inspired by [CSI Driver NFS Example](https://github.com/kubernetes-csi/csi-driver-nfs/blob/master/deploy/example/nfs-provisioner/README.md)).
 
 ## Install Applications
 
@@ -118,4 +119,17 @@ Put a test `index.html` file in `./storage/nginx`. Save the following (or whatev
 
 Use the command `curl http://localhost` to see if the web server works, and it should return the contents of the file that we put in the directory.
 
-If this is what you see, congratulations, you have set up Kubernetes cluster with an NFS share.
+If this is what you see, congratulations, you have set up Kubernetes cluster with NFS storage.
+
+## TODO
+
+- [ ] More applications
+- [ ] Deployment on separate node machines
+- [ ] Cloud deployment options
+- [ ] High availability Postgres
+  - [ ] Use a PG operator
+
+## Backup
+
+Since the entire cluster is on a single VM, backups are simply an export
+of the VM, compression, and then copying to a cloud bucket.
