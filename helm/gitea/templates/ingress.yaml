@@ -4,18 +4,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}-gitea-ingress
+  name: {{ .Release.Name }}-ingress
   namespace: {{ .Values.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
-  - host: {{ .Values.gitea.ingress.host }}
-    http:
+  - http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: /gitea(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
-            name: {{ .Release.Name }}-gitea
+            name: {{ .Release.Name }}-svc
             port: 
               number: {{ .Values.gitea.service.port }}
 {{- end }}

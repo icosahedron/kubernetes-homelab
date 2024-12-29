@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea-config
+  namespace: {{ .Values.namespace }}
+data:
+  GITEA__server__ROOT_URL: {{ .Values.gitea.config.root_url }}

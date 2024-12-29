@@ -2,6 +2,8 @@
 namespace: vcs
 
 gitea:
+  config:
+    root_url: "http://vps.flagrantsystemerror.com/gitea"
   image:
     repository: gitea/gitea
     tag: 1.22
@@ -11,6 +13,7 @@ gitea:
   ingress:
     enabled: true
     host: gitea.icosahedron.dev
+    path: /gitea(.*)
   database:
     type: postgres
     host: postgres-postgresql.db.svc.cluster.local

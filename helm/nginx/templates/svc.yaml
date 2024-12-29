@@ -15,13 +15,14 @@ metadata:
   name: nginx-ingress
   namespace: {{ .Values.namespace }}
   annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: /.*
+        pathType: ImplementationSpecific
         backend:
           service:
             name: nginx
