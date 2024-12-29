@@ -58,13 +58,12 @@ delete-gitea:
 # Check if required tools are installed
 check-tools:
     #!/usr/bin/env bash
-    REQUIRED_TOOLS=("kind" "docker" "helm" "kapp")
+    REQUIRED_TOOLS=("kind" "docker" "helm" "kapp" "kubectl")
     MISSING_TOOLS=()
 
     # Function to check if a command exists
     check_command() {
         if ! command -v "$1" >/dev/null 2>&1; then
-            MISSING_TOOLS+=("$1")
             return 1
         fi
         return 0
@@ -73,10 +72,20 @@ check-tools:
     # Check each required tool
     echo "Checking for required tools..."
     for tool in "${REQUIRED_TOOLS[@]}"; do
-        if check_command "$tool"; then
-            echo "✓ $tool is installed"
+        if [ "$tool" == "docker" ]; then
+            if check_command "docker" || check_command "podman"; then
+                echo "✓ docker or podman is installed"
+            else
+                MISSING_TOOLS+=("$tool")
+                echo "✗ Neither docker nor podman is installed"
+            fi
         else
-            echo "✗ $tool is not installed"
+            if check_command "$tool"; then
+                echo "✓ $tool is installed"
+            else
+                MISSING_TOOLS+=("$tool")
+                echo "✗ $tool is not installed"
+            fi
         fi
     done
 

@@ -23,8 +23,12 @@ spec:
         - name: gitea-data
           mountPath: /data
           subPath: gitea
+        envFrom:
+        - configMapRef:
+            name: gitea-config
       volumes:
       - name: gitea-data
         persistentVolumeClaim:
           claimName: gitea-{{ .Values.storage.pv }}-pvc
+
 
