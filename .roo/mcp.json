@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "hello_server": {
+      "command": "python3",
+      "args": ["${workspaceFolder}/mcp.new/hello_server.py"],
+      "cwd": "${workspaceFolder}/mcp.new",
+      "disabled": false
+    },
+    "reverse_text": {
+      "command": "python3",
+      "args": ["${workspaceFolder}/mcp.new/hello_server.py"],
+      "cwd": "${workspaceFolder}/mcp.new",
+      "disabled": false
+    }
+  }
+}

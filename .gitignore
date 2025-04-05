@@ -5,3 +5,5 @@ storage
 .vagrant
 Vagrantfile
 helm/cloudnative-pg
+venv/**
+**/__pycache__/*

@@ -1,0 +1,46 @@
+---
+description: Proxmox SSH Connection Rules
+globs: utils/ssh.py
+
+---
+<rule>
+name: proxmox_ssh
+description: Validate SSH connections to Proxmox cluster machines
+filters:
+  - type: command_line
+    pattern: "ssh://root@(pve-(pc|mac)-mini\.icosahedron\.org)"
+  - type: event
+    pattern: "command_execute"
+
+actions:
+  - type: reject
+    conditions:
+      - pattern: "(?!--key-path\s+~/.ssh/pve\.key)"
+        message: "Proxmox connections require --key-path ~/.ssh/pve.key"
+
+  - type: suggest
+    message: |
+      Valid Proxmox connection formats:
+      python utils/ssh.py ssh://root@pve-pc-mini.icosahedron.org "command" --key-path ~/.ssh/pve.key
+      python utils/ssh.py ssh://root@pve-mac-mini.icosahedron.org "command" --key-path ~/.ssh/pve.key
+
+  - type: ask_followup_question  
+    when: "Proxmox cluster|Proxmox machine"
+    question: "Which Proxmox machine are you connecting to?"
+    suggestions:
+      - "pve-pc-mini.icosahedron.org (Primary cluster node)"
+      - "pve-mac-mini.icosahedron.org (Secondary node)"
+      - "Both nodes (Cluster operation)"
+
+examples:
+  - input: python utils/ssh.py ssh://root@pve-pc-mini.icosahedron.org "hostname"
+    output: "[ERROR] Missing required key file: --key-path ~/.ssh/pve.key"
+    
+  - input: python utils/ssh.py ssh://user@pve-mac-mini.icosahedron.org "ls" --key-path ~/.ssh/pve.key
+    output: "[ERROR] Proxmox connections must use root@host format"
+
+metadata:
+  priority: high
+  version: 1.1
+  environment: production
+</rule>

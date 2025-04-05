@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: test-gitea
+  name: deploy-gitea-pod
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-gitea
+  template:
+    metadata:
+      labels:
+        app: test-gitea
+      name: deploy-gitea-pod
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - name: deploy-gitea-pod
+        image: bitnami/postgresql:14
+        command:
+        - "/bin/bash"
+        - "-c"
+        - "echo $POSTGRES_PASSWORD; sleep infinity;"
+        env:
+        - name: DB_HOST
+          value: {{ .Values.gitea.database.host }}
+        - name: DB_PORT
+          value: {{ .Values.gitea.database.port | quote }}
+        - name: DB_USER
+          value: {{ .Values.gitea.database.user }}
+        - name: DB_PASSWORD
+          value: {{ .Values.gitea.database.password }}
+        - name: DB_NAME
+          value: {{ .Values.gitea.database.name }}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.gitea.postgresql.secretName }}
+              key: {{ .Values.gitea.postgresql.secretKey }}
+              namespace: {{ .Values.gitea.postgresql.namespace }}
+

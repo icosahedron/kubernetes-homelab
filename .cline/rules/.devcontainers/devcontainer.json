@@ -1,0 +1,25 @@
+// .devcontainer/devcontainer.json
+{
+    "name": "Python 3 Dev Container with Local Files",
+    "image": "python:3.12",
+  
+    "mounts": [
+      "source=/Users/jaykint/Projects/kubernetes-homelab/,target=/kubernetes-homelab,type=bind,consistency=cached"
+    ],
+  
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "ms-python.python"
+        ]
+      }
+    },
+  
+    // Optional: Run commands after container creation
+    // "postCreateCommand": "pip install -r requirements.txt"
+  
+    // Optional: Keep the container running even if VS Code closes
+    // "shutdownAction": "none"
+}
+  
+  

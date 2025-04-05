@@ -1,0 +1,42 @@
+---
+description: Enhanced SSH Admin Safety Rules
+globs: src/mcp/ssh-admin-server.py
+---
+
+<rule>
+name: ssh_destructive_commands
+description: Block dangerous commands in SSH admin context
+filters:
+  - type: command_content
+    pattern: "(rm -rf|chmod 777| > /dev/|dd if=/dev/)"
+  - type: server
+    pattern: "ssh-admin"
+
+actions:
+  - type: reject
+    message: "Destructive command blocked by enhanced safety rules (SSH Admin)"
+
+metadata:
+  priority: critical
+  inherits: ssh_command_validation
+  version: 1.1
+</rule>
+
+<rule>
+name: ssh_session_management  
+description: Enforce session timeout and cleanup
+filters:
+  - type: server
+    pattern: "ssh-admin"
+  - type: event
+    pattern: "session_activity"
+
+actions:
+  - type: enforce
+    condition: "last_used > 15m"
+    action: "close_session"
+    message: "Session terminated due to inactivity"
+
+metadata:
+  priority: high
+</rule>

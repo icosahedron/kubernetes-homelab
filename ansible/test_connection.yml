@@ -1,0 +1,17 @@
+---
+- name: Test Proxmox connection
+  hosts: proxmox
+  become: true
+  
+  tasks:
+    - name: Verify connection works
+      ansible.builtin.command: ls -la /
+      register: ls_output
+      changed_when: false  # Mark as non-changing task
+
+    - name: Show connection results
+      ansible.builtin.debug:
+        msg: |
+          Connection successful!
+          Root directory contents:
+          {{ ls_output.stdout_lines | join('\n') }}

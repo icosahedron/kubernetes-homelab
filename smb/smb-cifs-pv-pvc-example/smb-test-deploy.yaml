@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: deploy-smb-pod
+  namespace: smb-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+      name: deploy-smb-pod
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+        - name: deploy-smb-pod
+          image: ubuntu:latest
+          command:
+            - "/bin/bash"
+            - "-c"
+            - set -euo pipefail; while true; do echo $(date) >> /mnt/smb/outfile; sleep 1; done
+          volumeMounts:
+            - name: smb
+              mountPath: "/mnt/smb"
+              readOnly: false
+      volumes:
+        - name: smb
+          persistentVolumeClaim:
+            claimName: pvc-smb

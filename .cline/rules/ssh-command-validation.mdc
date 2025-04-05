@@ -1,0 +1,45 @@
+---
+description: SSH Command Validation
+globs: utils/ssh.py
+
+---
+<rule>
+name: ssh_command_validation
+description: Validate SSH command execution parameters
+filters:
+  - type: command_line
+    pattern: "python .*utils/ssh\.py"
+  - type: event
+    pattern: "command_execute"
+
+actions:
+  - type: reject
+    conditions:
+      - pattern: "^ssh://(?!\w+@\w+)"
+        message: "SSH URL must be in format ssh://user@host"
+        
+      - pattern: "(?!--key-path|--password)"
+        message: "Must provide either --key-path or --password for authentication"
+
+  - type: suggest
+    message: |
+      Valid SSH command format:
+      python utils/ssh.py ssh://user@host "command" --key-path ~/.ssh/keyfile
+      python utils/ssh.py ssh://admin@server:2222 "ls -l" --password
+
+examples:
+  - input: |
+      # Invalid - missing authentication
+      python utils/ssh.py ssh://user@example.com "ls"
+      
+      # Invalid - bad URL format
+      python utils/ssh.py user@example.com "ls" --key-path key.pem
+    output: |
+      [ERROR] Missing authentication: Must provide either --key-path or --password
+      [ERROR] Invalid URL format: Must start with ssh://
+
+metadata:
+  priority: critical
+  version: 1.0
+  security: high
+</rule>

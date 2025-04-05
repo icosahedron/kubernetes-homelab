@@ -1,0 +1,13 @@
+proxmox:
+  ssh_url: ssh://root@pve-pc-mini.icosahedron.org
+  key_path: ~/.ssh/pve.key
+  storage: local-lvm
+
+vms:
+  - vmid: 9001
+    template_name: ubuntu-cloud-template
+    vm_name: ubuntu-test-1
+    ciuser: ubuntu
+    ssh_key_file: ~/.ssh/pve.pub
+    force: false
+    start: true

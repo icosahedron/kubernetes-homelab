@@ -1,0 +1,5 @@
+# Allow specific hidden files
+!/.clinerules
+# Or allow all hidden files in a directory
+!/.cline/**
+
