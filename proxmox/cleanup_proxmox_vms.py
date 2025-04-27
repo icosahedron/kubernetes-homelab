@@ -1,69 +1,105 @@
+#!/usr/bin/env python3
+import sys
 import argparse
 from urllib.parse import urlparse
-from typing import Tuple
 from ssh_exec import ssh_connect, ssh_execute, ssh_disconnect
 
-# Assume these are imported from your SSH module
-# from your_ssh_module import ssh_connect, ssh_execute, ssh_disconnect
 
-def cleanup_vm(proxmox_host: str, username: str, password: str = None, key_path: str = None, vmid: int = 9000, storage: str = "local-lvm"):
+def cleanup_vm(proxmox_host: str,
+               username: str,
+               password: str = None,
+               key_path: str = None,
+               vmid: int = 9000,
+               storage: str = "local-lvm",
+               destroy_options: str = "--destroy-unreferenced-disks --purge") -> None:
+    """
+    Stop and destroy a VM on a Proxmox host, cleaning up disks.
+    """
+    # Connect via SSH
     success, client, msg = ssh_connect(proxmox_host, username, password, key_path)
     if not success:
         print(f"SSH connection failed: {msg}")
         return
 
-    print("Connected to Proxmox host via SSH.")
+    print(f"Connected to Proxmox host {proxmox_host} as {username}.")
 
-    # Check if VM exists
-    check_vm_cmd = f"qm status {vmid}"
-    success, (exit_code, output), error = ssh_execute(client, check_vm_cmd)
-    if success and exit_code == 0:
-        print(f"Destroying VM {vmid}...")
-        destroy_vm_cmd = f"qm destroy {vmid} --destroy-unreferenced-disks"
-        ssh_execute(client, destroy_vm_cmd)
+    # Stop the VM
+    print(f"Stopping VM {vmid}...")
+    stop_cmd = f"qm stop {vmid}"
+    success, (exit_code, output), error = ssh_execute(client, stop_cmd)
+    if not success or exit_code != 0:
+        print(f"Warning: failed to stop VM {vmid}: {error or output}")
     else:
-        print(f"VM {vmid} does not exist. Skipping destroy.")
+        print(f"Stop command output: {output}")
 
-    # Check for leftover disks
-    list_disks_cmd = f"pvesm list {storage} | awk '/vm-{vmid}-/ {{print $1}}'"
-    success, (exit_code, output), error = ssh_execute(client, list_disks_cmd)
-    leftover_disks = output.strip().split('\n') if output.strip() else []
-
-    if leftover_disks:
-        print(f"Cleaning up leftover disks for VM {vmid}...")
-        for vol in leftover_disks:
-            print(f"Freeing volume {vol}...")
-            free_disk_cmd = f"pvesm free {vol}"
-            ssh_execute(client, free_disk_cmd)
+    # Destroy the VM and its disks
+    print(f"Destroying VM {vmid} with options '{destroy_options}'...")
+    destroy_cmd = f"qm destroy {vmid} {destroy_options}"
+    success, (exit_code, output), error = ssh_execute(client, destroy_cmd)
+    if not success or exit_code != 0:
+        print(f"Error: failed to destroy VM {vmid}: {error or output}")
     else:
-        print(f"No leftover disks found for VM {vmid}.")
+        print(f"Destroy command output: {output}")
 
     ssh_disconnect(client)
-    print(f"Cleanup completed for VM {vmid}.")
+    print("Cleanup complete.")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Clean up a Proxmox VM and associated disks remotely via SSH")
-    parser.add_argument("ssh_url", help="SSH URL in the form ssh://user@host")
-    parser.add_argument("--password", help="SSH password")
-    parser.add_argument("--key-path", help="Path to SSH key")
-    parser.add_argument("--vmid", type=int, required=True, help="VM ID to clean up")
-    parser.add_argument("--storage", default="local-lvm", help="Proxmox storage name (default: local-lvm)")
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Stop and clean up a Proxmox VM by ID over SSH"
+    )
+    # SSH URL as a required positional argument
+    parser.add_argument(
+        'ssh_url',
+        help='SSH URL to Proxmox host (e.g. ssh://root@proxmox.example.com:22)'
+    )
+    # Authentication: either key-path or password
+    auth_group = parser.add_mutually_exclusive_group()
+    auth_group.add_argument(
+        '--key-path', '-k',
+        help='Path to SSH private key file for authentication'
+    )
+    auth_group.add_argument(
+        '--password', '-p',
+        help='SSH password (mutually exclusive with key-path)'
+    )
+    parser.add_argument(
+        '--id', '-i', dest='vmid', required=True, type=int,
+        help='ID of the VM to stop and destroy'
+    )
+    parser.add_argument(
+        '--storage', '-s', default='local-lvm',
+        help='Storage pool name for disk cleanup (default: local-lvm)'
+    )
+    parser.add_argument(
+        '--destroy-options', '-d',
+        default='--destroy-unreferenced-disks --purge',
+        help='Additional options for qm destroy'
+    )
     args = parser.parse_args()
 
-    parsed_url = urlparse(args.ssh_url)
-    if parsed_url.scheme != "ssh" or not parsed_url.username or not parsed_url.hostname:
-        print("Invalid SSH URL format. Use ssh://user@host")
-        exit(1)
+    # Parse SSH URL
+    parsed = urlparse(args.ssh_url)
+    if parsed.scheme != 'ssh' or not parsed.username or not parsed.hostname:
+        print("Invalid SSH URL format. Use ssh://user@host[:port]")
+        sys.exit(1)
 
-    username = parsed_url.username
-    proxmox_host = parsed_url.hostname
+    proxmox_host = parsed.hostname
+    username = parsed.username
+    port = parsed.port or 22
 
+    # Connect and cleanup
     cleanup_vm(
         proxmox_host=proxmox_host,
         username=username,
         password=args.password,
         key_path=args.key_path,
         vmid=args.vmid,
-        storage=args.storage
+        storage=args.storage,
+        destroy_options=args.destroy_options
     )
+
+
+if __name__ == '__main__':
+    main()

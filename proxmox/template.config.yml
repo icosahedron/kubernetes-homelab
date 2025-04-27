@@ -1,0 +1,50 @@
+ssh:
+  # Full SSH URL to your Proxmox host
+  url: "ssh://root@pve-pc-mini.icosahedron.org"
+  # or split into host/username/port:
+  # host: proxmox.example.com
+  # username: root
+  # port: 22
+  key_path: "~/.ssh/pve.key"
+
+image:
+  # Ubuntu cloud image URL
+  url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+  # Where to place it on the Proxmox node
+  local_path: "/var/lib/vz/template/iso/jammy-server-cloudimg-amd64.img"
+  download: true
+
+vm:
+  id:           9000
+  name:         "ubuntu-server-console"
+  memory_mb:    2048
+  cores:        2
+  storage_pool: "local-lvm"
+
+  network:
+    model:      "virtio"
+    bridge:     "vmbr0"
+
+  scsihw:       "virtio-scsi-pci"
+  scsi_device:  "scsi0"
+
+  cloudinit:
+    enable:     true
+    device:     "ide2"
+
+  boot:
+    order:      "c"
+    disk:       "scsi0"
+
+  # Serial console only—no GUI/vga framebuffer
+  serial:
+    type:       "socket"
+    device:     "serial0"
+  vga:          "serial0"
+
+cleanup:
+  remove_local_image: true
+
+force:
+  destroy_existing: false
+  destroy_options:  "--destroy-unreferenced-disks --purge"
