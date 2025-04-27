@@ -11,3 +11,4 @@ vms:
     ssh_key_file: ~/.ssh/pve.pub
     force: false
     start: true
+    guest_agent: true

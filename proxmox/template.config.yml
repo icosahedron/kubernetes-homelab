@@ -1,6 +1,6 @@
 ssh:
   # Full SSH URL to your Proxmox host
-  url: "ssh://root@pve-pc-mini.icosahedron.org"
+  url: "ssh://root@pve-mac-mini.icosahedron.org"
   # or split into host/username/port:
   # host: proxmox.example.com
   # username: root
@@ -15,36 +15,36 @@ image:
   download: true
 
 vm:
-  id:           9000
-  name:         "ubuntu-server-console"
-  memory_mb:    2048
-  cores:        2
+  id: 9000
+  name: "ubuntu-server-console"
+  memory_mb: 2048
+  cores: 2
   storage_pool: "local-lvm"
 
   network:
-    model:      "virtio"
-    bridge:     "vmbr0"
+    model: "virtio"
+    bridge: "vmbr0"
 
-  scsihw:       "virtio-scsi-pci"
-  scsi_device:  "scsi0"
+  scsihw: "virtio-scsi-pci"
+  scsi_device: "scsi0"
 
   cloudinit:
-    enable:     true
-    device:     "ide2"
+    enable: true
+    device: "ide2"
 
   boot:
-    order:      "c"
-    disk:       "scsi0"
+    order: "c"
+    disk: "scsi0"
 
   # Serial console only—no GUI/vga framebuffer
   serial:
-    type:       "socket"
-    device:     "serial0"
-  vga:          "serial0"
+    type: "socket"
+    device: "serial0"
+  vga: "serial0"
 
 cleanup:
   remove_local_image: true
 
 force:
   destroy_existing: false
-  destroy_options:  "--destroy-unreferenced-disks --purge"
+  destroy_options: "--destroy-unreferenced-disks --purge"

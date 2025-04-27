@@ -7,3 +7,5 @@ Vagrantfile
 helm/cloudnative-pg
 venv/**
 **/__pycache__/*
+*.html
+*.log

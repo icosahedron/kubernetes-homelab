@@ -35,7 +35,7 @@ def force_remove_vm(client, vmid: int) -> bool:
 def lookup_vmid_by_name(client, template_name: str) -> int:
     success, (exit_code, output), error = ssh_execute(client, "qm list")
     if not success or exit_code != 0:
-        print(f"Failed to list VMs: {error}\nOutput: {output}")
+        print(f"Failed to list VMs: {error}\nOutput:\n{output}")
         return None
 
     for line in output.splitlines():
@@ -56,27 +56,41 @@ def create_vm(client, template_name: str, vmid: int, vm_name: str) -> bool:
     create_vm_cmd = f"qm clone {template_vmid} {vmid} --name {vm_name} --full true"
     success, (exit_code, output), error = ssh_execute(client, create_vm_cmd)
     if not success or exit_code != 0:
-        print(f"Failed to create VM: {error}\nOutput: {output}")
+        print(Fore.RED + f"Failed to create VM: {error}\nOutput:\n{output}")
         return False
 
-    print(f"VM {vm_name} ({vmid}) created successfully.")
+    print(Fore.GREEN + f"VM {vm_name} ({vmid}) created successfully.")
     return True
 
-def init_vm(client, vmid: int, ciuser: str, ssh_public_key: str) -> bool:
+def init_vm(client, vmid: int, ciuser: str, ssh_public_key: str, include_guest_agent: bool) -> bool:
     print(f"Setting cloud-init user and SSH key for VM {vmid}...")
 
     remote_key_path = f"/tmp/vm-{vmid}-key.pub"
     upload_key_cmd = f"echo '{ssh_public_key}' > {remote_key_path}"
     success, (exit_code, output), error = ssh_execute(client, upload_key_cmd)
     if not success or exit_code != 0:
-        print(f"Failed to upload SSH key: {error}\nOutput: {output}")
+        print(Fore.RED + f"Failed to upload SSH key: {error}\nOutput:\n{output}")
         return False
 
     ssh_key_cmd = f"qm set {vmid} --ciuser {ciuser} --sshkeys {remote_key_path}"
     success, (exit_code, output), error = ssh_execute(client, ssh_key_cmd)
     if not success or exit_code != 0:
-        print(f"Failed to set cloud-init options: {error}\nOutput: {output}")
+        print(Fore.RED + f"Failed to set cloud-init options: {error}\nOutput:\n{output}")
         return False
+
+    print(f"Configuring console and guest agent for VM {vmid}")
+    no_graphics_cmd = f"qm set {vmid} --vga serial0 --serial0 socket --args '-nographic'"
+    success, (exit_code, output), error = ssh_execute(client, no_graphics_cmd)
+    if not success or exit_code != 0:
+        print(Fore.RED + f"Failed to set graphics options: {error}\nOutput:\n{output}")
+        return False
+
+    if include_guest_agent:
+        guest_agent_cmd = f"qm set {vmid} --agent enabled=1"
+        success, (exit_code, output), error = ssh_execute(client, guest_agent_cmd)
+        if not success or exit_code != 0:
+            print(Fore.RED + f"Failed to instal guest agent: {error}\nOutput:\n{output}")
+            return False
 
     cleanup_cmd = f"rm -f {remote_key_path}"
     ssh_execute(client, cleanup_cmd)
@@ -88,21 +102,22 @@ def start_vm(client, vmid: int) -> bool:
     start_vm_cmd = f"qm start {vmid}"
     success, (exit_code, output), error = ssh_execute(client, start_vm_cmd)
     if not success or exit_code != 0:
-        print(f"Failed to start VM: {error}\nOutput: {output}")
+        print(Fore.RED + f"Failed to start VM: {error}\nOutput:\n{output}")
         return False
 
-    print(f"VM {vmid} started successfully.")
+    print(Fore.GREEN + f"VM {vmid} started successfully.")
     return True
 
 def provision_vm(proxmox_host: str, username: str, password: str = None, key_path: str = None, port: int = 22,
                  vmid: int = 9000, template_name: str = "", vm_name: str = "", ciuser: str = "",
-                 ssh_public_key: str = "", force: bool = False, start: bool = False, storage: str = "local-lvm"):
+                 ssh_public_key: str = "", force: bool = False, start: bool = False, storage: str = "local-lvm",
+                 include_guest_agent : bool = True):
     if key_path:
         key_path = os.path.expanduser(key_path)
 
     success, client, msg = ssh_connect(proxmox_host, username, password, key_path, port)
     if not success:
-        print(f"SSH connection failed: {msg}")
+        print(Fore.Red + f"SSH connection failed: {msg}")
         return
 
     print("Connected to Proxmox host via SSH.")
@@ -119,7 +134,7 @@ def provision_vm(proxmox_host: str, username: str, password: str = None, key_pat
         if not create_vm(client, template_name, vmid, vm_name):
             return
 
-        if not init_vm(client, vmid, ciuser, ssh_public_key):
+        if not init_vm(client, vmid, ciuser, ssh_public_key, include_guest_agent):
             return
 
         if start:
@@ -135,6 +150,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("config_file", nargs="?", help="YAML configuration file")
     parser.add_argument("--help", action="store_true", help="Show example config and exit")
+    parser.add_argument(
+        '--force', action='store_true',
+        help='Override force-destroy setting in config'
+    )
+
     args = parser.parse_args()
 
     colorama_init(autoreset=True)
@@ -158,6 +178,7 @@ vms:
     ssh_key_file: /path/to/public/key.pub
     force: true
     start: true
+    guest_agent: false
 """)
         exit(0)
 
@@ -219,9 +240,10 @@ vms:
                     vm_name=vm["vm_name"],
                     ciuser=vm["ciuser"],
                     ssh_public_key=ssh_public_key,
-                    force=vm.get("force", False),
+                    force=True if args.force else vm.get("force", False),
                     start=vm.get("start", False),
-                    storage=storage
+                    storage=storage,
+                    include_guest_agent=vm.get("guest_agent")
                 )
                 successful_vms.append(vm.get('vm_name', vm.get('vmid')))
             except Exception as e:
