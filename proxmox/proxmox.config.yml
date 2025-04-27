@@ -9,5 +9,5 @@ vms:
     vm_name: ubuntu-test-1
     ciuser: ubuntu
     ssh_key_file: ~/.ssh/pve.pub
-    force: false
+    force: true
     start: true
