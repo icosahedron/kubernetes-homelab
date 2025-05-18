@@ -1,5 +1,5 @@
 proxmox:
-  ssh_url: ssh://root@pve-pc-mini.icosahedron.org
+  ssh_url: ssh://root@pve-mac-mini.icosahedron.org
   key_path: ~/.ssh/pve.key
   storage: local-lvm
 

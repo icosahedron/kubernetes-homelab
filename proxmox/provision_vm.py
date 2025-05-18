@@ -4,7 +4,7 @@ import argparse
 import time
 import yaml
 from urllib.parse import urlparse
-from typing import Tuple
+from typing import Tuple, Optional
 import os
 from colorama import Fore, Style, init as colorama_init
 from ssh_exec import ssh_connect, ssh_execute, ssh_disconnect
@@ -14,7 +14,7 @@ def check_if_exists(client, vmid: int) -> bool:
     success, (exit_code, output), error = ssh_execute(client, check_vm_cmd)
     return success and exit_code == 0
 
-def force_remove_vm(client, vmid: int) -> bool:
+def delete_vm(client, vmid: int) -> bool:
     print(f"Force flag set. Stopping and destroying existing VM {vmid}...")
     ssh_execute(client, f"qm stop {vmid}")
 
@@ -89,7 +89,7 @@ def init_vm(client, vmid: int, ciuser: str, ssh_public_key: str, include_guest_a
         guest_agent_cmd = f"qm set {vmid} --agent enabled=1"
         success, (exit_code, output), error = ssh_execute(client, guest_agent_cmd)
         if not success or exit_code != 0:
-            print(Fore.RED + f"Failed to instal guest agent: {error}\nOutput:\n{output}")
+            print(Fore.RED + f"Failed to install guest agent: {error}\nOutput:\n{output}")
             return False
 
     cleanup_cmd = f"rm -f {remote_key_path}"
@@ -108,58 +108,97 @@ def start_vm(client, vmid: int) -> bool:
     print(Fore.GREEN + f"VM {vmid} started successfully.")
     return True
 
-def provision_vm(proxmox_host: str, username: str, password: str = None, key_path: str = None, port: int = 22,
-                 vmid: int = 9000, template_name: str = "", vm_name: str = "", ciuser: str = "",
-                 ssh_public_key: str = "", force: bool = False, start: bool = False, storage: str = "local-lvm",
-                 include_guest_agent : bool = True):
+def upload_cloud_init_file(client,
+                            cloud_init_file: str,
+                            vmid: int) -> None:
+    """
+    Uploads a cloud-init user-data file to the Proxmox host snippets directory
+    and configures the VM to use it via qm set --cicustom.
+    Raises on failure.
+    """
+    local_path = os.path.expanduser(cloud_init_file)
+    if not os.path.isfile(local_path):
+        raise FileNotFoundError(f"Cloud-init file {local_path} not found.")
+    remote_snippet_dir = "/var/lib/vz/snippets"
+    remote_filename = os.path.basename(local_path)
+    remote_path = f"{remote_snippet_dir}/{remote_filename}"
+
+    print(f"Uploading cloud-init file {local_path} to {remote_path}...")
+    success, msg = ssh_copy_file(client, local_path, remote_path)
+    if not success:
+        raise RuntimeError(f"Failed to upload cloud-init file: {msg}")
+
+    print(f"Configuring VM {vmid} to use custom cloud-init user-data {remote_filename}...")
+    cicustom_cmd = f"qm set {vmid} --cicustom user=snippets:{remote_filename}"
+    success, (exit_code, output), error = ssh_execute(client, cicustom_cmd)
+    if not success or exit_code != 0:
+        # cleanup snippet on failure
+        ssh_execute(client, f"rm -f {remote_path}")
+        raise RuntimeError(
+            f"Failed to set cloud-init custom file: {error}\nOutput:\n{output}"
+        )
+
+def provision_vm(
+    proxmox_host: str,
+    username: str,
+    password: Optional[str] = None,
+    key_path: Optional[str] = None,
+    port: int = 22,
+    vmid: int = 9000,
+    template_name: str = "",
+    vm_name: str = "",
+    ciuser: str = "",
+    ssh_public_key: str = "",
+    force: bool = False,
+    start: bool = False,
+    storage: str = "local-lvm",
+    include_guest_agent: bool = True,
+    cloud_init_file: Optional[str] = None
+) -> None:
+    # Expand key path
     if key_path:
         key_path = os.path.expanduser(key_path)
 
-    success, client, msg = ssh_connect(proxmox_host, username, password, key_path, port)
+    # Connect
+    success, client, error = ssh_connect(
+        proxmox_host,
+        username,
+        password=password,
+        key_path=key_path,
+        port=port
+    )
     if not success:
-        print(Fore.Red + f"SSH connection failed: {msg}")
-        return
-
-    print("Connected to Proxmox host via SSH.")
+        raise RuntimeError(f"SSH connection failed: {error}")
 
     try:
+        # Handle cloud-init upload if requested
+        if cloud_init_file:
+            upload_cloud_init_file(client, cloud_init_file, vmid)
+
+        # Proceed with VM create/configure
         if check_if_exists(client, vmid):
             if force:
-                if not force_remove_vm(client, vmid):
-                    return
+                delete_vm(client, vmid)
             else:
-                print(f"VM {vmid} already exists. Use 'force: true' in config to recreate it.")
+                print(f"VM {vmid} already exists. Use the --force flag to delete it. Skipping.")
                 return
 
         if not create_vm(client, template_name, vmid, vm_name):
-            return
+            raise RuntimeError("create_vm failed")
 
         if not init_vm(client, vmid, ciuser, ssh_public_key, include_guest_agent):
-            return
+            raise RuntimeError("init_vm failed")
 
         if start:
             if not start_vm(client, vmid):
-                return
+                raise RuntimeError("start_vm failed")
 
-        print(f"Provisioning completed successfully for VM {vmid} ({vm_name}).")
+        print(Fore.GREEN + f"Provisioning completed successfully for VM {vmid} ({vm_name}).")
     finally:
         ssh_disconnect(client)
         print("Disconnected from Proxmox host.")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("config_file", nargs="?", help="YAML configuration file")
-    parser.add_argument("--help", action="store_true", help="Show example config and exit")
-    parser.add_argument(
-        '--force', action='store_true',
-        help='Override force-destroy setting in config'
-    )
-
-    args = parser.parse_args()
-
-    colorama_init(autoreset=True)
-
-    if args.help or not args.config_file:
+def print_usage():
         print("""
 YAML configuration file is required.
 Example:
@@ -180,6 +219,22 @@ vms:
     start: true
     guest_agent: false
 """)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("config_file", nargs="?", help="YAML configuration file")
+    parser.add_argument("--help", action="store_true", help="Show example config and exit")
+    parser.add_argument(
+        '--force', action='store_true',
+        help='Override force-destroy setting in config'
+    )
+
+    args = parser.parse_args()
+
+    colorama_init(autoreset=True)
+
+    if args.help or not args.config_file:
+        print_usage()
         exit(0)
 
     with open(args.config_file, 'r') as f:

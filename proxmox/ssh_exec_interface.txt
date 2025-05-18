@@ -1,0 +1,7 @@
+# This is the interface to the `ssh_exec` library. Please use these functions to work with the Proxmox server over SSH,
+# running commands on the remote server to accomplish your goals.
+
+def ssh_connect(hostname: str, username: str, password: Optional[str] = None, key_path: Optional[str] = None, port: int = 22) -> Tuple[bool, Optional[SSHClientManager], str]
+def ssh_copy_file(ssh_manager: SSHClientManager, local_path: str, remote_path: str) -> Tuple[bool, str]
+def ssh_disconnect(ssh_manager: SSHClientManager)
+def ssh_execute(ssh_manager: SSHClientManager, command: str) -> Tuple[bool, Tuple[int, str], str]
